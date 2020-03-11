@@ -1,5 +1,5 @@
 # use the node argon (4.4.3) image as base
-FROM node:argon
+FROM node:carbon
 
 # Set the Vorlon.JS Docker Image maintainer
 MAINTAINER Julien Corioland (Microsoft, DX)

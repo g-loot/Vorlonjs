@@ -12,88 +12,88 @@ import config = require("./vorlon.config");
 
 var global = this;
 if (!global.setImmediate) {
-	global.setImmediate = function (callback) {
-		setTimeout(callback, 1);
-	}
+    global.setImmediate = function (callback) {
+        setTimeout(callback, 1);
+    }
 }
 
 try {
-	var logger = {
-		debug: function (...logargs) {
-			var args = Array.prototype.slice.call(arguments);
-			process.send({ log: { level: "debug", args: args, origin: 'logger.debug' } });
-		},
-		info: function (...logargs) {
-			var args = Array.prototype.slice.call(arguments);
-			process.send({ log: { level: "info", args: args, origin: 'logger.info' } });
-		},
-		warn: function (...logargs) {
-			var args = Array.prototype.slice.call(arguments);
+    var logger = {
+        debug: function (...logargs) {
+            var args = Array.prototype.slice.call(arguments);
+            process.send({ log: { level: "debug", args: args, origin: 'logger.debug' } });
+        },
+        info: function (...logargs) {
+            var args = Array.prototype.slice.call(arguments);
+            process.send({ log: { level: "info", args: args, origin: 'logger.info' } });
+        },
+        warn: function (...logargs) {
+            var args = Array.prototype.slice.call(arguments);
 
-			process.send({ log: { level: "warn", args: args, origin: 'logger.warn' } });
-		},
-		error: function (...logargs) {
-			var args = Array.prototype.slice.call(arguments);
-			process.send({ log: { level: "error", args: args, origin: 'logger.error' } });
-		},
-	};
+            process.send({ log: { level: "warn", args: args, origin: 'logger.warn' } });
+        },
+        error: function (...logargs) {
+            var args = Array.prototype.slice.call(arguments);
+            process.send({ log: { level: "error", args: args, origin: 'logger.error' } });
+        },
+    };
 
-	var userdatapath = process.argv[2];
-	var vorlonconfig = config.getConfig(userdatapath);
-	var context = new servercontext.VORLON.DefaultContext();
+    var userdatapath = process.argv[2];
+    var vorlonconfig = config.getConfig(userdatapath);
+    var context = new servercontext.VORLON.DefaultContext();
 
-	context.sessions.onsessionadded = function (session) {
-		process.send({ session: { action: "added", session: session } });
-	}
+    context.sessions.onsessionadded = function (session) {
+        process.send({ session: { action: "added", session: session } });
+    }
 
-	context.sessions.onsessionremoved = function (session) {
-		process.send({ session: { action: "removed", session: session } });
-	}
+    context.sessions.onsessionremoved = function (session) {
+        process.send({ session: { action: "removed", session: session } });
+    }
 
-	context.sessions.onsessionupdated = function (session) {
-		process.send({ session: { action: "updated", session: session } });
-	}	
-	
-	context.plugins = {
-		getPluginsFor : function(sessionid, callback) { // (error, plugins: ISessionPlugins) => void)
-			var plugins = config.getSessionConfig(userdatapath, sessionid);
-			logger.debug("get plugins from local for " + sessionid);
-			if (callback)
-				callback(null, plugins);
-		}
-	}
-	
-	context.sessions.logger = logger;
-	vorlonconfig.httpModule = http;
-	vorlonconfig.protocol = "http";
-	context.httpConfig = vorlonconfig;
-	context.baseURLConfig = vorlonconfig;
+    context.sessions.onsessionupdated = function (session) {
+        process.send({ session: { action: "updated", session: session } });
+    }
 
-	context.logger = logger;
+    context.plugins = {
+        getPluginsFor: function (sessionid, callback) { // (error, plugins: ISessionPlugins) => void)
+            var plugins = config.getSessionConfig(userdatapath, sessionid);
+            logger.debug("get plugins from local for " + sessionid);
+            if (callback)
+                callback(null, plugins);
+        }
+    }
 
-	var webServer = new vorlonWebserver.VORLON.WebServer(context);
-	var dashboard = new vorlonDashboard.VORLON.Dashboard(context);
-	var server = new vorlonServer.VORLON.Server(context);
-	var HttpProxy = new vorlonHttpProxy.VORLON.HttpProxy(context, false);
+    context.sessions.logger = logger;
+    vorlonconfig.httpModule = http;
+    vorlonconfig.protocol = "https";
+    context.httpConfig = vorlonconfig;
+    context.baseURLConfig = vorlonconfig;
 
-	webServer.components.push(dashboard);
-	webServer.components.push(server);
-	webServer.components.push(HttpProxy);
+    context.logger = logger;
 
-	webServer.start();
-	
-	var webapp = (<any>webServer)._app;
-	webapp.use(function logErrors(err, req, res, next) {
-		if (err) {
-			process.send({ log: { level: "error", args: err.stack, origin: 'logger.error' } });
-		}
-		next(err);
-	});
-	
-	process.on("message", function(args){
-		process.send({ session: { action: "init", session: context.sessions.all() } });
-	});
-	
+    var webServer = new vorlonWebserver.VORLON.WebServer(context);
+    var dashboard = new vorlonDashboard.VORLON.Dashboard(context);
+    var server = new vorlonServer.VORLON.Server(context);
+    var HttpProxy = new vorlonHttpProxy.VORLON.HttpProxy(context, false);
+
+    webServer.components.push(dashboard);
+    webServer.components.push(server);
+    webServer.components.push(HttpProxy);
+
+    webServer.start();
+
+    var webapp = (<any>webServer)._app;
+    webapp.use(function logErrors(err, req, res, next) {
+        if (err) {
+            process.send({ log: { level: "error", args: err.stack, origin: 'logger.error' } });
+        }
+        next(err);
+    });
+
+    process.on("message", function (args) {
+        process.send({ session: { action: "init", session: context.sessions.all() } });
+    });
+
 } catch (exception) {
-	process.send({ log: { level: "error", args: [exception.stack], origin: 'trycatch' } });
+    process.send({ log: { level: "error", args: [exception.stack], origin: 'trycatch' } });
 }

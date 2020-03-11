@@ -41,7 +41,7 @@ export module VORLON {
                     this.httpModule = http;
                 }
                 else {
-                    this.protocol = "http";
+                    this.protocol = "https";
                     this.httpModule = http;
                 }
             }
