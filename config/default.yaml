@@ -27,6 +27,6 @@ routes:
     - name: internal-secured
       namespace: core
     cert: gloot-tls-cert
-  vorlon:
+  vorlon-client:
     port: 1337
     cert: gloot-tls-cert
