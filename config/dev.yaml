@@ -1,9 +1,5 @@
-ingress:
-    tls:
-      - secretName: "gloot-tls-cert"
-        hosts:
-          - vorlon-dev.gloot.com
-    hosts:
-      - host: vorlon-dev.gloot.com
-        paths:
-          - /
+routes:
+  vorlon-dashboard:
+    match: Host(`vorlon-dev.gloot.com`) && PathPrefix(`/dashboard`)
+  vorlon:
+    match: Host(`vorlon-dev.gloot.com`)

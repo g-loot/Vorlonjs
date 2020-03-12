@@ -15,11 +15,18 @@ probe:
     path: /
     port: 1337
 
-ingress:
-  enabled: true
-  port: http
-
 replicas: 1
 
 hpa:
   enabled: false
+
+routes:
+  vorlon-dashboard:
+    port: 1337
+    coreMiddlewares:
+    - name: internal-secured
+      namespace: core
+    cert: gloot-tls-cert
+  vorlon:
+    port: 1337
+    cert: gloot-tls-cert
