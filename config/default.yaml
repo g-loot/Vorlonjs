@@ -1,0 +1,25 @@
+applicationName: "vorlon"
+
+image:
+  repository: gcr.io/play-gll-gg/mobile-vorlon
+  tag: 0.0.3
+  pullPolicy: Always
+
+ports:
+  - name: http
+    port: 1337
+    protocol: TCP
+
+probe:
+  httpGet:
+    path: /
+    port: 1337
+
+ingress:
+  enabled: true
+  port: http
+
+replicas: 1
+
+hpa:
+  enabled: false
