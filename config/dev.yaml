@@ -1,5 +1,5 @@
 routes:
+  vorlon-client:
+    match: Host(`vorlon-dev.gloot.com`) && (PathPrefix(`/socket.io`) || PathPrefix(`/vorlon/`) || PathPrefix(`/vorlon.js`))
   vorlon-dashboard:
-    match: Host(`vorlon-dev.gloot.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/_oauth`))
-  vorlon:
     match: Host(`vorlon-dev.gloot.com`)
