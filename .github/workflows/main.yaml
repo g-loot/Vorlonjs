@@ -47,4 +47,5 @@ jobs:
         with:
           gcp_key: ${{ secrets.GCP_KEY }}
           cluster: dev-gll-play
+          helm_version: 3
           helm_args: '-f config/default.yaml -f config/dev.yaml --set image.tag=$(git describe --tags)'
