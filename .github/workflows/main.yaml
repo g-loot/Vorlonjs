@@ -1,0 +1,50 @@
+name: CI
+
+on: push
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout code
+      - uses: actions/checkout@v1
+      - name: Build docker
+        run: docker build .
+      
+      
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: build-test
+    if: github.ref == 'refs/heads/master'
+    steps:
+      # Checkout code (to get helm chart)
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: Set version
+        id: version_bump
+        uses: anothrNick/github-tag-action@1.8.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: "patch"
+          RELEASE_BRANCHES: "master"
+      # Setup GCP
+      - name: Setup gcloud
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '270.0.0'
+          service_account_email: ${{ secrets.GCP_EMAIL }}
+          service_account_key: ${{ secrets.GCP_KEY }}
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - run: gcloud auth configure-docker
+        # Push image
+      - name: Build docker
+        run: docker build . -t gcr.io/play-gll-gg/mobile-vorlon:$(git describe --tags)
+      - name: Push image
+        run: docker push gcr.io/play-gll-gg/mobile-vorlon:$(git describe --tags)
+      # Deploy to dev environment
+      - name: Deploy to dev
+        uses: g-loot/action-deploy-helm@master
+        with:
+          gcp_key: ${{ secrets.GCP_KEY }}
+          cluster: dev-gll-play
+          helm_args: '-f config/default.yaml -f config/dev.yaml --set image.tag=$(git describe --tags)'
